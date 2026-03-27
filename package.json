@@ -1,5 +1,5 @@
 {
-  "name": "dewey",
+  "name": "@meetdewey/typescript-sdk",
   "version": "1.0.0",
   "description": "TypeScript client for the Dewey API",
   "main": "dist/index.js",
@@ -24,5 +24,12 @@
   "license": "MIT",
   "engines": {
     "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/meetdewey/typescript-sdk"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
