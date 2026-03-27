@@ -187,9 +187,7 @@ describe('BaseClient.streamSSE', () => {
       }),
     )
     const client = makeClient()
-    const iter = client
-      .streamSSE('/research', { q: 'test' })
-      [Symbol.asyncIterator]()
-    await expect(iter.next()).rejects.toMatchObject({ status: 401 })
+    const gen = client.streamSSE('/research', { q: 'test' })
+    await expect(gen.next()).rejects.toMatchObject({ status: 401 })
   })
 })

@@ -78,7 +78,7 @@ export class BaseClient {
   async *streamSSE(
     path: string,
     body: unknown,
-  ): AsyncIterable<Record<string, unknown>> {
+  ): AsyncGenerator<Record<string, unknown>> {
     const url = `${this.baseUrl}${path}`
     const res = await fetch(url, {
       method: 'POST',
