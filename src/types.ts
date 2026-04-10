@@ -10,6 +10,12 @@ export interface Collection {
   embeddingModel: string
   description: string | null
   descriptionDocCount: number | null
+  enableSummarization: boolean
+  enableCaptioning: boolean
+  llmModel: string | null
+  lastSummarizationModel: string | null
+  lastCaptioningModel: string | null
+  instructions: string | null
   createdAt: string
   deletedAt: string | null
 }
@@ -29,6 +35,10 @@ export interface UpdateCollectionInput {
   chunkOverlap?: number
   embeddingModel?: string
   description?: string | null
+  enableSummarization?: boolean
+  enableCaptioning?: boolean
+  llmModel?: string | null
+  instructions?: string | null
 }
 
 // ── Documents ─────────────────────────────────────────────────────────────────

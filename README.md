@@ -64,11 +64,24 @@ new DeweyClient({ apiKey: string, baseUrl?: string })
 | `update(id, input)`       | Update a collection    |
 | `delete(id)`              | Delete a collection    |
 
+`update()` accepts: `name`, `visibility`, `chunkSize`, `chunkOverlap`, `description`, `enableSummarization`, `enableCaptioning`, `llmModel`, `instructions`. All fields are optional; `llmModel` and `instructions` accept `null` to clear the field.
+
+```ts
+// Set research instructions for a collection
+await client.collections.update(collectionId, {
+  instructions: 'All figures are in USD unless stated otherwise.',
+})
+
+// Clear instructions
+await client.collections.update(collectionId, { instructions: null })
+```
+
 ### `client.documents`
 
 | Method                                         | Description                            |
 | ---------------------------------------------- | -------------------------------------- |
 | `upload(collectionId, file, opts?)`            | Multipart upload                       |
+| `uploadMany(collectionId, files, opts?)`       | Bulk upload via presigned S3 URLs      |
 | `requestUploadUrl(collectionId, input)`        | Get a presigned S3 URL                 |
 | `confirm(collectionId, documentId)`            | Confirm presigned upload               |
 | `list(collectionId)`                           | List documents                         |
@@ -78,6 +91,26 @@ new DeweyClient({ apiKey: string, baseUrl?: string })
 | `delete(collectionId, documentId)`             | Delete a document                      |
 
 `upload()` accepts `File`, `Blob`, `Buffer`, or a Node.js `ReadableStream`.
+
+`uploadMany()` is the recommended approach for large datasets. Each file is uploaded directly to S3 (bypassing the API server), so there are no payload-size limits. Files that match an existing document's hash are deduplicated automatically.
+
+```ts
+import { readdir, readFile } from 'node:fs/promises'
+import path from 'node:path'
+
+const dir = './reports'
+const names = await readdir(dir)
+const files = await Promise.all(
+  names
+    .filter(n => n.endsWith('.pdf'))
+    .map(async n => ({ file: await readFile(path.join(dir, n)), filename: n }))
+)
+
+const docs = await client.documents.uploadMany(collectionId, files, {
+  concurrency: 10,
+  onProgress: (doc, n, total) => console.log(`${n}/${total} ${doc.filename}`),
+})
+```
 
 ### `client.sections`
 
@@ -128,15 +161,22 @@ try {
 
 ## Presigned upload flow
 
+For single files or when you need manual control, use the low-level presigned URL flow. For bulk ingestion, prefer `uploadMany()` which handles this automatically with concurrency.
+
 ```ts
+import { createHash } from 'node:crypto'
+
+const data = await fs.readFile('data.pdf')
+const contentHash = createHash('sha256').update(data).digest('hex')
+
 // 1. Request a presigned URL
 const { documentId, uploadUrl } = await client.documents.requestUploadUrl(
   collectionId,
-  { filename: 'data.pdf', contentType: 'application/pdf', fileSizeBytes: size, contentHash: hash },
+  { filename: 'data.pdf', contentType: 'application/pdf', fileSizeBytes: data.byteLength, contentHash },
 )
 
-// 2. PUT the file bytes directly to the URL (no auth header)
-await fetch(uploadUrl, { method: 'PUT', body: fileBuffer, headers: { 'Content-Type': 'application/pdf' } })
+// 2. PUT the file bytes directly to S3 (no auth header needed)
+await fetch(uploadUrl, { method: 'PUT', body: data, headers: { 'Content-Type': 'application/pdf' } })
 
 // 3. Confirm to trigger ingestion
 const doc = await client.documents.confirm(collectionId, documentId)
