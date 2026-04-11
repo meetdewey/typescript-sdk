@@ -223,7 +223,10 @@ export class DocumentsResource {
         const s3Res = await fetch(urlResp.uploadUrl, {
           method: 'PUT',
           headers: { 'Content-Type': contentType },
-          body: data,
+          body: data.buffer.slice(
+            data.byteOffset,
+            data.byteOffset + data.byteLength,
+          ) as ArrayBuffer,
         })
         if (!s3Res.ok) {
           throw new Error(
