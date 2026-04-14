@@ -175,6 +175,98 @@ export type ResearchEvent =
   | { type: 'done'; sessionId: string; sources: ResearchSource[] }
   | { type: 'error'; message: string }
 
+// ── Claims ────────────────────────────────────────────────────────────────────
+
+export interface ClaimMapItem {
+  id: string
+  text: string
+  sourceText?: string
+  documentId: string
+  documentName: string
+  sectionId: string
+  sectionTitle: string
+  importance: number
+  x: number
+  y: number
+}
+
+export type ClaimMapEvent =
+  | { type: 'progress'; pct: number }
+  | { type: 'done'; total: number; claims: ClaimMapItem[] }
+  | { type: 'error'; message: string }
+
+export interface Claim {
+  id: string
+  sectionTitle: string
+  sectionLineage: string
+  text: string
+  importance: number
+  position: number
+}
+
+export interface DocumentClaims {
+  documentId: string
+  claims: Claim[]
+}
+
+// ── Collection Stats ──────────────────────────────────────────────────────────
+
+export interface CollectionStats {
+  docCount: number
+  totalFileSizeBytes: number
+  totalSections: number
+  totalChunks: number
+  statusCounts: Record<string, number>
+  summarizedCount: number
+  captionedCount: number
+  claimsExtractedCount: number
+  totalClaimsCount: number
+}
+
+// ── Contradictions ────────────────────────────────────────────────────────────
+
+export interface ContradictionClaim {
+  id: string
+  text: string
+  document: { id: string; filename: string }
+  sectionTitle: string
+}
+
+export interface Contradiction {
+  id: string
+  severity: 'low' | 'medium' | 'high'
+  status: 'active' | 'dismissed' | 'applied'
+  explanation: string
+  suggestedInstruction: string | null
+  clusterTopicSummary: string | null
+  createdAt: string
+  claims: ContradictionClaim[]
+}
+
+export interface ContradictionList {
+  total: number
+  items: Contradiction[]
+}
+
+export interface ContradictionDetectResult {
+  runId: string
+  status: string
+  enqueuedAt: string
+}
+
+export interface ContradictionRun {
+  id: string
+  status: string
+  claimsProcessed: number | null
+  clustersAnalyzed: number | null
+  contradictionsFound: number | null
+  model: string | null
+  startedAt: string | null
+  completedAt: string | null
+  error: string | null
+  createdAt: string
+}
+
 // ── Provider Keys ─────────────────────────────────────────────────────────────
 
 export type ProviderName = 'openai' | 'cohere' | 'voyageai'

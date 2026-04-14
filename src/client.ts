@@ -75,6 +75,34 @@ export class BaseClient {
     return res.json() as Promise<T>
   }
 
+  async *streamSSEGet(path: string): AsyncGenerator<Record<string, unknown>> {
+    const url = `${this.baseUrl}${path}`
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        Accept: 'text/event-stream',
+      },
+    })
+
+    if (!res.ok) {
+      let message = res.statusText
+      try {
+        const err = (await res.json()) as { message?: string; error?: string }
+        message = err.message ?? err.error ?? message
+      } catch {
+        // ignore parse errors
+      }
+      throw new DeweyError(res.status, message)
+    }
+
+    if (!res.body) {
+      throw new DeweyError(500, 'No response body for SSE stream')
+    }
+
+    yield* this._readSSEBody(res.body)
+  }
+
   async *streamSSE(
     path: string,
     body: unknown,
@@ -105,7 +133,13 @@ export class BaseClient {
       throw new DeweyError(500, 'No response body for SSE stream')
     }
 
-    const reader = res.body.getReader()
+    yield* this._readSSEBody(res.body)
+  }
+
+  private async *_readSSEBody(
+    responseBody: ReadableStream<Uint8Array>,
+  ): AsyncGenerator<Record<string, unknown>> {
+    const reader = responseBody.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
 

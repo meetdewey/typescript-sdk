@@ -1,6 +1,8 @@
 import { BaseClient, DeweyError } from './client.js'
 import type { DeweyClientOptions } from './client.js'
+import { ClaimsResource } from './resources/claims.js'
 import { CollectionsResource } from './resources/collections.js'
+import { ContradictionsResource } from './resources/contradictions.js'
 import { DocumentsResource } from './resources/documents.js'
 import { ProviderKeysResource } from './resources/provider-keys.js'
 import { ResearchResource } from './resources/research.js'
@@ -24,6 +26,10 @@ export class DeweyClient {
   readonly research: ResearchResource
   /** Manage provider API keys for a project. */
   readonly providerKeys: ProviderKeysResource
+  /** Access extracted claims and the claim map. */
+  readonly claims: ClaimsResource
+  /** Detect and resolve contradictions across claims. */
+  readonly contradictions: ContradictionsResource
 
   private readonly _base: BaseClient
 
@@ -35,5 +41,7 @@ export class DeweyClient {
     this.retrieval = new RetrievalResource(this._base)
     this.research = new ResearchResource(this._base)
     this.providerKeys = new ProviderKeysResource(this._base)
+    this.claims = new ClaimsResource(this._base)
+    this.contradictions = new ContradictionsResource(this._base)
   }
 }
