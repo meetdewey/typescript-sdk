@@ -56,13 +56,17 @@ new DeweyClient({ apiKey: string, baseUrl?: string })
 
 ### `client.collections`
 
-| Method                    | Description            |
-| ------------------------- | ---------------------- |
-| `create(input)`           | Create a collection    |
-| `list()`                  | List collections       |
-| `get(id)`                 | Get by ID              |
-| `update(id, input)`       | Update a collection    |
-| `delete(id)`              | Delete a collection    |
+| Method                          | Description                                      |
+| ------------------------------- | ------------------------------------------------ |
+| `create(input)`                 | Create a collection                              |
+| `list()`                        | List collections                                 |
+| `get(id)`                       | Get by ID                                        |
+| `update(id, input)`             | Update a collection                              |
+| `delete(id)`                    | Delete a collection                              |
+| `stats(id)`                     | Document count, storage, section/chunk/claim counts |
+| `recomputeSummaries(id)`        | Re-run AI section summarization                  |
+| `recomputeCaptions(id)`         | Re-run AI captioning for images and tables       |
+| `recomputeClaims(id)`           | Re-extract factual claims (clears existing)      |
 
 `update()` accepts: `name`, `visibility`, `chunkSize`, `chunkOverlap`, `description`, `enableSummarization`, `enableCaptioning`, `llmModel`, `instructions`. All fields are optional; `llmModel` and `instructions` accept `null` to clear the field.
 
@@ -74,6 +78,10 @@ await client.collections.update(collectionId, {
 
 // Clear instructions
 await client.collections.update(collectionId, { instructions: null })
+
+// Get collection statistics
+const stats = await client.collections.stats(collectionId)
+console.log(`${stats.docCount} docs, ${stats.totalClaimsCount} claims`)
 ```
 
 ### `client.documents`
@@ -134,6 +142,57 @@ const docs = await client.documents.uploadMany(collectionId, files, {
 | `stream(collectionId, q, opts?)`          | SSE research stream → `AsyncIterable`    |
 
 `stream()` options: `depth` (`'quick'|'balanced'|'deep'|'exhaustive'`), `model` (OpenAI model ID).
+
+### `client.claims`
+
+| Method                                          | Description                                  |
+| ----------------------------------------------- | -------------------------------------------- |
+| `mapStream(collectionId)`                       | SSE stream of all claims with UMAP coordinates |
+| `listByDocument(documentId, opts?)`             | Claims extracted from a specific document    |
+
+`mapStream()` yields `ClaimMapEvent` objects: `{ type: 'progress', pct }`, `{ type: 'done', total, claims }`, or `{ type: 'error', message }`.
+
+```ts
+for await (const event of client.claims.mapStream(collectionId)) {
+  if (event.type === 'done') {
+    console.log(`${event.total} claims`)
+    for (const claim of event.claims) {
+      console.log(`[${claim.importance}] ${claim.text}`)
+    }
+  }
+}
+
+// Per-document claims (fast, no SSE)
+const { claims } = await client.claims.listByDocument(documentId, { minImportance: 3 })
+```
+
+### `client.contradictions`
+
+| Method                                                          | Description                                         |
+| --------------------------------------------------------------- | --------------------------------------------------- |
+| `list(collectionId, opts?)`                                     | List detected contradictions                        |
+| `detect(collectionId)`                                          | Trigger async contradiction detection run           |
+| `getLatestRun(collectionId)`                                    | Poll status of the latest detection run             |
+| `dismiss(collectionId, contradictionId)`                        | Mark a contradiction as ignored                     |
+| `applyInstruction(collectionId, contradictionId, instruction?)` | Apply resolution; appends to collection instructions |
+
+```ts
+// Trigger detection, then poll
+const run = await client.contradictions.detect(collectionId)
+console.log('Run ID:', run.runId)
+
+// Later: poll status
+const status = await client.contradictions.getLatestRun(collectionId)
+console.log(status.status, status.contradictionsFound)
+
+// List active contradictions
+const { items } = await client.contradictions.list(collectionId, { status: 'active' })
+for (const c of items) {
+  console.log(c.severity, c.explanation)
+  // Apply the suggested resolution
+  await client.contradictions.applyInstruction(collectionId, c.id)
+}
+```
 
 ### `client.providerKeys`
 
