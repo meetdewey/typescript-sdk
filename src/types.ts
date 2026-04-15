@@ -175,6 +175,12 @@ export type ResearchEvent =
   | { type: 'done'; sessionId: string; sources: ResearchSource[] }
   | { type: 'error'; message: string }
 
+export interface ResearchResult {
+  answer: string
+  sessionId: string
+  sources: ResearchSource[]
+}
+
 // ── Claims ────────────────────────────────────────────────────────────────────
 
 export interface ClaimMapItem {
