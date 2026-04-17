@@ -16,6 +16,9 @@ export interface Collection {
   lastSummarizationModel: string | null
   lastCaptioningModel: string | null
   instructions: string | null
+  enableDeduplication: boolean
+  lastDeduplicationAt: string | null
+  duplicateGroupCount: number
   createdAt: string
   deletedAt: string | null
 }
@@ -39,6 +42,7 @@ export interface UpdateCollectionInput {
   enableCaptioning?: boolean
   llmModel?: string | null
   instructions?: string | null
+  enableDeduplication?: boolean
 }
 
 // ── Documents ─────────────────────────────────────────────────────────────────
@@ -65,6 +69,10 @@ export interface Document {
   chunkCount: number | null
   contentHash: string | null
   errorMessage: string | null
+  duplicateGroupId: string | null
+  duplicateRelationship: 'canonical' | 'near_duplicate' | null
+  coverageToCanonical: number | null
+  coverageFromCanonical: number | null
   createdAt: string
 }
 
@@ -290,4 +298,47 @@ export interface CreateProviderKeyInput {
   provider: ProviderName
   key: string
   name: string
+}
+
+// ── Duplicates ────────────────────────────────────────────────────────────────
+
+export interface DuplicateGroupMember {
+  id: string
+  filename: string
+  relationship: 'canonical' | 'near_duplicate' | null
+  coverageToCanonical: number | null
+  coverageFromCanonical: number | null
+  createdAt: string
+}
+
+export interface DuplicateGroup {
+  id: string
+  canonicalDocumentId: string
+  detectedAt: string
+  members: DuplicateGroupMember[]
+}
+
+export interface DuplicateGroupList {
+  total: number
+  items: DuplicateGroup[]
+}
+
+export interface DuplicateDetectResult {
+  runId: string
+  status: string
+  jobsEnqueued: number
+  enqueuedAt: string
+}
+
+export interface DuplicateRun {
+  id: string
+  status: string
+  jobsEnqueued: number | null
+  jobsProcessed: number | null
+  duplicatesDetected: number | null
+  duplicateGroupsCreated: number | null
+  startedAt: string | null
+  completedAt: string | null
+  error: string | null
+  createdAt: string
 }

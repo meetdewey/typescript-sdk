@@ -194,6 +194,38 @@ for (const c of items) {
 }
 ```
 
+### `client.duplicates`
+
+Fuzzy document deduplication. Identifies near-duplicate documents via MinHash signatures, marks one member of each cluster as canonical, and excludes near-duplicates from retrieval and contradiction detection. Must be enabled per-collection with `client.collections.update(id, { enableDeduplication: true })`.
+
+| Method                                                       | Description                                                          |
+| ------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `detect(collectionId)`                                       | Trigger async dedup run across all ready documents                   |
+| `getLatestRun(collectionId)`                                 | Poll status of the latest dedup run                                  |
+| `list(collectionId, opts?)`                                  | List duplicate groups with members and coverage percentages          |
+| `promoteCanonical(collectionId, groupId, canonicalDocumentId)` | Promote a different member to canonical; old canonical becomes near_duplicate |
+| `disband(collectionId, groupId)`                             | Disband a group; all former members rejoin retrieval as distinct     |
+
+```ts
+// Enable on a collection (one-time)
+await client.collections.update(collectionId, { enableDeduplication: true })
+
+// Trigger detection, then poll
+const run = await client.duplicates.detect(collectionId)
+const status = await client.duplicates.getLatestRun(collectionId)
+console.log(status.status, status.duplicateGroupsCreated)
+
+// Review groups
+const { items } = await client.duplicates.list(collectionId)
+for (const group of items) {
+  for (const m of group.members) {
+    if (m.relationship === 'near_duplicate') {
+      console.log(`${m.filename} covers ${Math.round((m.coverageToCanonical ?? 0) * 100)}% of canonical`)
+    }
+  }
+}
+```
+
 ### `client.providerKeys`
 
 | Method                        | Description                    |

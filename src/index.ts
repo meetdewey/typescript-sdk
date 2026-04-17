@@ -4,6 +4,7 @@ import { ClaimsResource } from './resources/claims.js'
 import { CollectionsResource } from './resources/collections.js'
 import { ContradictionsResource } from './resources/contradictions.js'
 import { DocumentsResource } from './resources/documents.js'
+import { DuplicatesResource } from './resources/duplicates.js'
 import { ProviderKeysResource } from './resources/provider-keys.js'
 import { ResearchResource } from './resources/research.js'
 import { RetrievalResource } from './resources/retrieval.js'
@@ -30,6 +31,8 @@ export class DeweyClient {
   readonly claims: ClaimsResource
   /** Detect and resolve contradictions across claims. */
   readonly contradictions: ContradictionsResource
+  /** Detect and manage near-duplicate documents. */
+  readonly duplicates: DuplicatesResource
 
   private readonly _base: BaseClient
 
@@ -43,5 +46,6 @@ export class DeweyClient {
     this.providerKeys = new ProviderKeysResource(this._base)
     this.claims = new ClaimsResource(this._base)
     this.contradictions = new ContradictionsResource(this._base)
+    this.duplicates = new DuplicatesResource(this._base)
   }
 }
