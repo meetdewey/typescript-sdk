@@ -7,9 +7,9 @@ import type {
 
 /**
  * Fuzzy document deduplication. Identifies near-duplicate documents within a
- * collection using MinHash signatures and marks one member of each cluster as
- * canonical. Non-canonical documents are excluded from retrieval and
- * contradiction detection.
+ * collection by measuring how much content they share and marks one member of
+ * each cluster as canonical. Non-canonical documents are excluded from
+ * retrieval and contradiction detection.
  *
  * Must be enabled per-collection via `collections.update(id, { enableDeduplication: true })`.
  */

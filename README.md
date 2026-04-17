@@ -196,7 +196,7 @@ for (const c of items) {
 
 ### `client.duplicates`
 
-Fuzzy document deduplication. Identifies near-duplicate documents via MinHash signatures, marks one member of each cluster as canonical, and excludes near-duplicates from retrieval and contradiction detection. Must be enabled per-collection with `client.collections.update(id, { enableDeduplication: true })`.
+Fuzzy document deduplication. Identifies near-duplicate documents by measuring how much content they share, marks one member of each cluster as canonical, and excludes near-duplicates from retrieval and contradiction detection. Must be enabled per-collection with `client.collections.update(id, { enableDeduplication: true })`.
 
 | Method                                                       | Description                                                          |
 | ------------------------------------------------------------ | -------------------------------------------------------------------- |
