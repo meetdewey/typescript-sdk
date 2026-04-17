@@ -43,10 +43,11 @@ describe('CollectionsResource', () => {
   it('create() calls POST /collections with body', async () => {
     const spy = mockFetch({ id: 'col-1', name: 'My Docs' }, 201)
     const { resource } = makeResource()
-    await resource.create({ name: 'My Docs' })
+    await resource.create({ name: 'My Docs', projectId: 'proj-1' })
     expect(spy.mock.calls[0]?.[1]?.method).toBe('POST')
     expect(JSON.parse(spy.mock.calls[0]?.[1]?.body as string)).toMatchObject({
       name: 'My Docs',
+      projectId: 'proj-1',
     })
   })
 

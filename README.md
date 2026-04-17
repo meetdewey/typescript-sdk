@@ -25,8 +25,11 @@ import { DeweyClient } from 'dewey'
 
 const client = new DeweyClient({ apiKey: 'dwy_live_...' })
 
-// Create a collection
-const col = await client.collections.create({ name: 'My Docs' })
+// Create a collection (projectId from your Dewey dashboard → Project Settings)
+const col = await client.collections.create({
+  projectId: 'proj_...',
+  name: 'My Docs',
+})
 
 // Upload a document
 const doc = await client.documents.upload(col.id, file, { filename: 'report.pdf' })

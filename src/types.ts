@@ -24,6 +24,7 @@ export interface Collection {
 }
 
 export interface CreateCollectionInput {
+  projectId: string
   name: string
   visibility?: 'private' | 'public'
   chunkSize?: number
