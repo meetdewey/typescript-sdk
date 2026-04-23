@@ -1,6 +1,12 @@
 import { createHash } from 'node:crypto'
 import type { BaseClient } from '../client.js'
-import type { Document, UploadUrlRequest, UploadUrlResponse } from '../types.js'
+import type {
+  Document,
+  TagsResponse,
+  UpdateDocumentInput,
+  UploadUrlRequest,
+  UploadUrlResponse,
+} from '../types.js'
 
 export type UploadFileInput = File | Blob | Buffer | NodeJS.ReadableStream
 
@@ -13,6 +19,10 @@ export interface UploadOptions {
   contentHash?: string
   /** Human-readable name for the document (defaults to filename). */
   name?: string
+  /** Tags to assign to the document. */
+  tags?: string[]
+  /** Structured metadata to attach to the document. */
+  metadata?: Record<string, unknown>
 }
 
 export interface UploadManyItem {
@@ -21,6 +31,10 @@ export interface UploadManyItem {
   filename?: string
   /** MIME type. Defaults to application/octet-stream. */
   contentType?: string
+  /** Tags to assign to the document. */
+  tags?: string[]
+  /** Structured metadata to attach to the document. */
+  metadata?: Record<string, unknown>
 }
 
 export interface UploadManyOptions {
@@ -80,6 +94,9 @@ export class DocumentsResource {
 
     if (options.name) fd.append('name', options.name)
     if (options.contentHash) fd.append('contentHash', options.contentHash)
+    if (options.tags) fd.append('tags', JSON.stringify(options.tags))
+    if (options.metadata)
+      fd.append('metadata', JSON.stringify(options.metadata))
 
     return this.client.request<Document>(
       'POST',
@@ -105,11 +122,45 @@ export class DocumentsResource {
 
   /**
    * Confirm that a presigned upload has completed and trigger ingestion.
+   * Optionally set tags and metadata at confirm time.
    */
-  confirm(collectionId: string, documentId: string): Promise<Document> {
+  confirm(
+    collectionId: string,
+    documentId: string,
+    options: { tags?: string[]; metadata?: Record<string, unknown> } = {},
+  ): Promise<Document> {
+    const body =
+      options.tags !== undefined || options.metadata !== undefined
+        ? options
+        : undefined
     return this.client.request<Document>(
       'POST',
       `/collections/${collectionId}/documents/${documentId}/confirm`,
+      body !== undefined ? { body } : undefined,
+    )
+  }
+
+  /**
+   * Update a document's tags and/or metadata.
+   * By default metadata is merged; pass `replaceMetadata: true` to replace it.
+   */
+  update(
+    collectionId: string,
+    documentId: string,
+    input: UpdateDocumentInput,
+  ): Promise<Document> {
+    return this.client.request<Document>(
+      'PATCH',
+      `/collections/${collectionId}/documents/${documentId}`,
+      { body: input },
+    )
+  }
+
+  /** List all tags used across documents in a collection, with counts. */
+  listTags(collectionId: string): Promise<TagsResponse> {
+    return this.client.request<TagsResponse>(
+      'GET',
+      `/collections/${collectionId}/tags`,
     )
   }
 
@@ -212,6 +263,8 @@ export class DocumentsResource {
         contentType,
         fileSizeBytes: data.byteLength,
         contentHash,
+        tags: item.tags,
+        metadata: item.metadata,
       })
 
       let doc: Document

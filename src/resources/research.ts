@@ -24,11 +24,21 @@ export class ResearchResource {
   async *stream(
     collectionId: string,
     q: string,
-    options: { depth?: ResearchDepth; model?: string } = {},
+    options: {
+      depth?: ResearchDepth
+      model?: string
+      tags?: string[]
+      anyTags?: string[]
+      metadata?: Record<string, unknown>
+    } = {},
   ): AsyncIterable<ResearchEvent> {
+    const { depth, model, tags, anyTags, metadata } = options
     const body: Record<string, unknown> = { q }
-    if (options.depth) body.depth = options.depth
-    if (options.model) body.model = options.model
+    if (depth) body.depth = depth
+    if (model) body.model = model
+    if (tags?.length) body.tags = tags
+    if (anyTags?.length) body.anyTags = anyTags
+    if (metadata && Object.keys(metadata).length > 0) body.metadata = metadata
 
     for await (const event of this.client.streamSSE(
       `/collections/${collectionId}/research`,
@@ -52,11 +62,21 @@ export class ResearchResource {
   async researchSync(
     collectionId: string,
     q: string,
-    options: { depth?: ResearchDepth; model?: string } = {},
+    options: {
+      depth?: ResearchDepth
+      model?: string
+      tags?: string[]
+      anyTags?: string[]
+      metadata?: Record<string, unknown>
+    } = {},
   ): Promise<ResearchResult> {
+    const { depth, model, tags, anyTags, metadata } = options
     const body: Record<string, unknown> = { q }
-    if (options.depth) body.depth = options.depth
-    if (options.model) body.model = options.model
+    if (depth) body.depth = depth
+    if (model) body.model = model
+    if (tags?.length) body.tags = tags
+    if (anyTags?.length) body.anyTags = anyTags
+    if (metadata && Object.keys(metadata).length > 0) body.metadata = metadata
 
     return this.client.request<ResearchResult>(
       'POST',

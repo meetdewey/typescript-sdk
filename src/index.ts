@@ -13,6 +13,12 @@ import { SectionsResource } from './resources/sections.js'
 export { DeweyError } from './client.js'
 export type { DeweyClientOptions } from './client.js'
 export * from './types.js'
+export type {
+  UploadFileInput,
+  UploadManyItem,
+  UploadManyOptions,
+  UploadOptions,
+} from './resources/documents.js'
 
 export class DeweyClient {
   /** Access and manage collections. */

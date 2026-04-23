@@ -19,6 +19,7 @@ export interface Collection {
   enableDeduplication: boolean
   lastDeduplicationAt: string | null
   duplicateGroupCount: number
+  enableReranking: boolean
   createdAt: string
   deletedAt: string | null
 }
@@ -44,6 +45,7 @@ export interface UpdateCollectionInput {
   llmModel?: string | null
   instructions?: string | null
   enableDeduplication?: boolean
+  enableReranking?: boolean
 }
 
 // ── Documents ─────────────────────────────────────────────────────────────────
@@ -74,7 +76,16 @@ export interface Document {
   duplicateRelationship: 'canonical' | 'near_duplicate' | null
   coverageToCanonical: number | null
   coverageFromCanonical: number | null
+  tags: string[]
+  metadata: Record<string, unknown>
   createdAt: string
+}
+
+export interface UpdateDocumentInput {
+  tags?: string[]
+  metadata?: Record<string, unknown>
+  /** When true, replaces metadata entirely. When false (default), merges. */
+  replaceMetadata?: boolean
 }
 
 export interface UploadUrlRequest {
@@ -82,6 +93,17 @@ export interface UploadUrlRequest {
   contentType: string
   fileSizeBytes: number
   contentHash: string
+  tags?: string[]
+  metadata?: Record<string, unknown>
+}
+
+export interface TagCount {
+  name: string
+  count: number
+}
+
+export interface TagsResponse {
+  tags: TagCount[]
 }
 
 export interface UploadUrlResponse {

@@ -71,7 +71,7 @@ new DeweyClient({ apiKey: string, baseUrl?: string })
 | `recomputeCaptions(id)`         | Re-run AI captioning for images and tables       |
 | `recomputeClaims(id)`           | Re-extract factual claims (clears existing)      |
 
-`update()` accepts: `name`, `visibility`, `chunkSize`, `chunkOverlap`, `description`, `enableSummarization`, `enableCaptioning`, `llmModel`, `instructions`. All fields are optional; `llmModel` and `instructions` accept `null` to clear the field.
+`update()` accepts: `name`, `visibility`, `chunkSize`, `chunkOverlap`, `description`, `enableSummarization`, `enableCaptioning`, `enableReranking`, `enableDeduplication`, `llmModel`, `instructions`. All fields are optional; `llmModel` and `instructions` accept `null` to clear the field.
 
 ```ts
 // Set research instructions for a collection
