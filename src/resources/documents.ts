@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { BaseClient } from '../client.js'
 import type {
+  BatchConfirmDocument,
   Document,
   TagsResponse,
   UpdateDocumentInput,
@@ -196,6 +197,110 @@ export class DocumentsResource {
   /** Delete a document. Returns void on success. */
   delete(collectionId: string, documentId: string): Promise<void> {
     return this.client.request<void>('DELETE', `/documents/${documentId}`)
+  }
+
+  /**
+   * Upload multiple files in a single multipart request.
+   * Simpler than `uploadMany` when files are small enough for one HTTP call.
+   */
+  async batchUpload(
+    collectionId: string,
+    files: UploadManyItem[],
+  ): Promise<Document[]> {
+    type FileMeta = { tags?: string[]; metadata?: Record<string, unknown> }
+    const fileMetadata: Record<string, FileMeta> = {}
+    const resolved: Array<{ blob: Blob; filename: string }> = []
+
+    for (const item of files) {
+      const filename = item.filename ?? 'upload'
+      const contentType = item.contentType ?? 'application/octet-stream'
+      let blob: Blob
+      if (item.file instanceof File) {
+        blob = item.file
+      } else if (item.file instanceof Blob) {
+        blob = item.file
+      } else if (Buffer.isBuffer(item.file)) {
+        blob = new Blob([item.file.buffer as ArrayBuffer], {
+          type: contentType,
+        })
+      } else {
+        const chunks: Buffer[] = []
+        for await (const chunk of item.file as AsyncIterable<Buffer>) {
+          chunks.push(
+            Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as Uint8Array),
+          )
+        }
+        blob = new Blob([Buffer.concat(chunks)], { type: contentType })
+      }
+      resolved.push({ blob, filename })
+      if (item.tags !== undefined || item.metadata !== undefined) {
+        fileMetadata[filename] = {
+          ...(item.tags !== undefined && { tags: item.tags }),
+          ...(item.metadata !== undefined && { metadata: item.metadata }),
+        }
+      }
+    }
+
+    const fd = new FormData()
+    if (Object.keys(fileMetadata).length > 0) {
+      fd.append('fileMetadata', JSON.stringify(fileMetadata))
+    }
+    for (const { blob, filename } of resolved) {
+      fd.append('files', blob, filename)
+    }
+
+    return this.client.request<Document[]>(
+      'POST',
+      `/collections/${collectionId}/documents/batch`,
+      { formData: fd },
+    )
+  }
+
+  /**
+   * Confirm multiple pending documents at once and trigger ingestion.
+   * Use after batch-uploading via presigned URLs.
+   */
+  batchConfirm(
+    collectionId: string,
+    documents: BatchConfirmDocument[],
+  ): Promise<Document[]> {
+    return this.client.request<Document[]>(
+      'POST',
+      `/collections/${collectionId}/documents/batch-confirm`,
+      { body: { documents } },
+    )
+  }
+
+  /** Delete multiple documents in a single request. Returns void on success. */
+  batchDelete(collectionId: string, ids: string[]): Promise<void> {
+    return this.client.request<void>(
+      'DELETE',
+      `/collections/${collectionId}/documents/batch`,
+      { body: { ids } },
+    )
+  }
+
+  /**
+   * Re-queue all documents in error state in a collection.
+   * Returns the updated documents.
+   */
+  retryFailed(collectionId: string): Promise<Document[]> {
+    return this.client.request<Document[]>(
+      'POST',
+      `/collections/${collectionId}/documents/retry-failed`,
+    )
+  }
+
+  /**
+   * Long-poll until a document reaches `ready` or `error` status.
+   * Times out after ~5.5 minutes (returns DeweyError with status 408).
+   */
+  waitForReady(documentId: string): Promise<Document> {
+    return this.client.request<Document>(
+      'GET',
+      `/documents/${documentId}/wait`,
+      { signal: AbortSignal.timeout(330_000) },
+    )
   }
 
   /**

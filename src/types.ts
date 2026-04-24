@@ -88,6 +88,12 @@ export interface UpdateDocumentInput {
   replaceMetadata?: boolean
 }
 
+export interface BatchConfirmDocument {
+  id: string
+  tags?: string[]
+  metadata?: Record<string, unknown>
+}
+
 export interface UploadUrlRequest {
   filename: string
   contentType: string

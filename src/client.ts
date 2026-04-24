@@ -32,6 +32,7 @@ export class BaseClient {
       body?: unknown
       formData?: FormData
       headers?: Record<string, string>
+      signal?: AbortSignal
     } = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`
@@ -49,7 +50,12 @@ export class BaseClient {
       body = JSON.stringify(options.body)
     }
 
-    const res = await fetch(url, { method, headers, body })
+    const res = await fetch(url, {
+      method,
+      headers,
+      body,
+      signal: options.signal,
+    })
 
     if (!res.ok) {
       let message = res.statusText
