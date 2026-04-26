@@ -29,7 +29,12 @@ export class SectionsResource {
   scan(
     collectionId: string,
     query: string,
-    options: { topK?: number } = {},
+    options: {
+      topK?: number
+      tags?: string[]
+      anyTags?: string[]
+      metadata?: Record<string, unknown>
+    } = {},
   ): Promise<{
     results: Array<{
       score: number
@@ -46,13 +51,17 @@ export class SectionsResource {
       document: { id: string; filename: string }
     }>
   }> {
+    const { topK, tags, anyTags, metadata } = options
     return this.client.request(
       'POST',
       `/collections/${collectionId}/sections/scan`,
       {
         body: {
           query,
-          ...(options.topK !== undefined && { top_k: options.topK }),
+          ...(topK !== undefined && { top_k: topK }),
+          ...(tags !== undefined && { tags }),
+          ...(anyTags !== undefined && { anyTags }),
+          ...(metadata !== undefined && { metadata }),
         },
       },
     )
