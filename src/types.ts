@@ -94,6 +94,14 @@ export interface BatchConfirmDocument {
   metadata?: Record<string, unknown>
 }
 
+export interface BulkUpdateDocumentItem {
+  id: string
+  tags?: string[]
+  metadata?: Record<string, unknown>
+  /** When true, replaces metadata entirely. When false (default), merges. */
+  replaceMetadata?: boolean
+}
+
 export interface UploadUrlRequest {
   filename: string
   contentType: string

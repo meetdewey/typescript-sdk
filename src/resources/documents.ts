@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import type { BaseClient } from '../client.js'
 import type {
   BatchConfirmDocument,
+  BulkUpdateDocumentItem,
   Document,
   TagsResponse,
   UpdateDocumentInput,
@@ -154,6 +155,22 @@ export class DocumentsResource {
       'PATCH',
       `/collections/${collectionId}/documents/${documentId}`,
       { body: input },
+    )
+  }
+
+  /**
+   * Bulk-update tags and/or metadata for up to 500 documents.
+   * Metadata is shallow-merged by default; pass `replaceMetadata: true` per
+   * item to replace it entirely.
+   */
+  bulkUpdate(
+    collectionId: string,
+    documents: BulkUpdateDocumentItem[],
+  ): Promise<Document[]> {
+    return this.client.request<Document[]>(
+      'PATCH',
+      `/collections/${collectionId}/documents/bulk`,
+      { body: { documents } },
     )
   }
 
