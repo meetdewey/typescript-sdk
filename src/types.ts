@@ -81,6 +81,11 @@ export interface Document {
   createdAt: string
 }
 
+export interface DocumentSearchResult {
+  score: number
+  document: Document
+}
+
 export interface UpdateDocumentInput {
   tags?: string[]
   metadata?: Record<string, unknown>

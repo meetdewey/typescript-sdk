@@ -4,6 +4,7 @@ import type {
   BatchConfirmDocument,
   BulkUpdateDocumentItem,
   Document,
+  DocumentSearchResult,
   TagsResponse,
   UpdateDocumentInput,
   UploadUrlRequest,
@@ -317,6 +318,36 @@ export class DocumentsResource {
       'GET',
       `/documents/${documentId}/wait`,
       { signal: AbortSignal.timeout(330_000) },
+    )
+  }
+
+  /**
+   * Fuzzy-search documents in a collection by filename using trigram similarity.
+   * Returns documents ordered by similarity score (highest first).
+   */
+  searchDocuments(
+    collectionId: string,
+    q: string,
+    options: {
+      limit?: number
+      tags?: string[]
+      anyTags?: string[]
+      metadata?: Record<string, unknown>
+    } = {},
+  ): Promise<DocumentSearchResult[]> {
+    const { limit, tags, anyTags, metadata } = options
+    return this.client.request<DocumentSearchResult[]>(
+      'POST',
+      `/collections/${collectionId}/documents/search`,
+      {
+        body: {
+          q,
+          ...(limit !== undefined && { limit }),
+          ...(tags !== undefined && { tags }),
+          ...(anyTags !== undefined && { anyTags }),
+          ...(metadata !== undefined && { metadata }),
+        },
+      },
     )
   }
 
