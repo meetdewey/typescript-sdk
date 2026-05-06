@@ -53,7 +53,7 @@ new DeweyClient({ apiKey: string, baseUrl?: string })
 | Option    | Default                          | Description               |
 | --------- | -------------------------------- | ------------------------- |
 | `apiKey`  | —                                | `dwy_live_…` or `dwy_test_…` |
-| `baseUrl` | `https://api.meetdewey.com`      | Override for self-hosting |
+| `baseUrl` | `https://api.meetdewey.com/v1`   | Override for self-hosting |
 
 ## Resources
 

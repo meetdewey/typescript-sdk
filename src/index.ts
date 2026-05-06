@@ -1,5 +1,6 @@
 import { BaseClient, DeweyError } from './client.js'
 import type { DeweyClientOptions } from './client.js'
+import { AgentsResource } from './resources/agents.js'
 import { ClaimsResource } from './resources/claims.js'
 import { CollectionsResource } from './resources/collections.js'
 import { ContradictionsResource } from './resources/contradictions.js'
@@ -39,6 +40,8 @@ export class DeweyClient {
   readonly contradictions: ContradictionsResource
   /** Detect and manage near-duplicate documents. */
   readonly duplicates: DuplicatesResource
+  /** Invoke saved agents (streaming and sync). */
+  readonly agents: AgentsResource
 
   private readonly _base: BaseClient
 
@@ -53,5 +56,6 @@ export class DeweyClient {
     this.claims = new ClaimsResource(this._base)
     this.contradictions = new ContradictionsResource(this._base)
     this.duplicates = new DuplicatesResource(this._base)
+    this.agents = new AgentsResource(this._base)
   }
 }

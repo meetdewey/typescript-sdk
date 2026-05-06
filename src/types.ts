@@ -231,6 +231,82 @@ export interface ResearchResult {
   sources: ResearchSource[]
 }
 
+// ── Agents ────────────────────────────────────────────────────────────────────
+
+/**
+ * One section-level citation surfaced by an agent run. Mirrors the shape
+ * persisted on agent_runs.sources and shown in the dashboard's sources list.
+ */
+export interface AgentSource {
+  chunkId: string
+  sectionId: string
+  sectionTitle: string
+  sectionLevel: number
+  documentId: string
+  filename: string
+  score: number
+  collectionId: string
+  collectionName: string
+}
+
+export type AgentToolName =
+  | 'search_collection'
+  | 'scan_sections'
+  | 'get_section_chunks'
+  | 'list_documents'
+  | 'get_document'
+
+export type AgentRunStatus =
+  | 'running'
+  | 'succeeded'
+  | 'failed'
+  | 'cancelled'
+  | 'timeout'
+
+/** Terminal statuses — what the run lands on once the executor finishes. */
+export type AgentRunTerminalStatus = Exclude<AgentRunStatus, 'running'>
+
+/**
+ * Events emitted on the SSE stream from POST /invoke. Listen for `done` to
+ * get the final response/sources, `chunk` for streaming text, `tool_call` /
+ * `tool_result` for retrieval activity, and `error` / `warning` for problems.
+ */
+export type AgentRunEvent =
+  | { type: 'run_started'; runId: string }
+  | {
+      type: 'tool_call'
+      tool: AgentToolName
+      collectionId: string
+      args: Record<string, unknown>
+      stepIndex: number
+    }
+  | {
+      type: 'tool_result'
+      tool: AgentToolName
+      summary: string
+      stepIndex: number
+    }
+  | { type: 'chunk'; content: string }
+  | {
+      type: 'done'
+      runId: string
+      status: AgentRunTerminalStatus
+      response: string
+      iterationsUsed: number
+      sources: AgentSource[]
+    }
+  | { type: 'error'; message: string; code?: string }
+  | { type: 'warning'; message: string }
+
+/** Buffered response shape returned by POST /invoke/sync. */
+export interface AgentInvokeResult {
+  runId: string
+  response: string
+  sources: AgentSource[]
+  status: AgentRunTerminalStatus
+  warnings?: string[]
+}
+
 // ── Claims ────────────────────────────────────────────────────────────────────
 
 export interface ClaimMapItem {
