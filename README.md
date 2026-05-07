@@ -146,6 +146,36 @@ const docs = await client.documents.uploadMany(collectionId, files, {
 
 `stream()` options: `depth` (`'quick'|'balanced'|'deep'|'exhaustive'`), `model` (OpenAI model ID).
 
+### `client.agents`
+
+Invoke saved agents defined in the dashboard. `orgId` and `projectId` are UUIDs (not slugs); `agentSlug` is the human-readable slug shown in dashboard URLs (e.g. `'qa-test'`).
+
+| Method                                                        | Description                                          |
+| ------------------------------------------------------------- | ---------------------------------------------------- |
+| `invokeSync(orgId, projectId, agentSlug, { query })`          | Buffered run → `Promise<AgentInvokeResult>`          |
+| `stream(orgId, projectId, agentSlug, { query })`              | SSE run → `AsyncIterable<AgentRunEvent>`             |
+
+```ts
+// Buffered — resolves once the run terminates
+const result = await client.agents.invokeSync(orgId, projectId, 'qa-test', {
+  query: 'What changed in 2023?',
+})
+console.log(result.response)
+for (const s of result.sources) {
+  console.log(`- ${s.filename} § ${s.sectionTitle}`)
+}
+
+// Streaming — yields tool calls, tokens, and the final done event
+for await (const event of client.agents.stream(orgId, projectId, 'qa-test', {
+  query: 'What changed in 2023?',
+})) {
+  if (event.type === 'chunk') process.stdout.write(event.content)
+  if (event.type === 'done') console.log(`\n${event.sources.length} sources`)
+}
+```
+
+`AgentRunEvent` is a discriminated union over `type`: `'run_started' | 'tool_call' | 'tool_result' | 'chunk' | 'done' | 'error' | 'warning'`.
+
 ### `client.claims`
 
 | Method                                          | Description                                  |
