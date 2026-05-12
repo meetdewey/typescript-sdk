@@ -380,6 +380,16 @@ export interface ContradictionList {
   items: Contradiction[]
 }
 
+export interface ContradictionFile {
+  documentId: string
+  filename: string
+  contradictionCount: number
+}
+
+export interface ContradictionFileList {
+  files: ContradictionFile[]
+}
+
 export interface ContradictionDetectResult {
   runId: string
   status: string

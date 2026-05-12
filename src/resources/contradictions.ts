@@ -2,6 +2,7 @@ import type { BaseClient } from '../client.js'
 import type {
   Contradiction,
   ContradictionDetectResult,
+  ContradictionFileList,
   ContradictionList,
   ContradictionRun,
 } from '../types.js'
@@ -15,6 +16,8 @@ export class ContradictionsResource {
    * @param collectionId - The collection ID.
    * @param options.severity - Filter by severity level.
    * @param options.status - Filter by resolution status. Defaults to `'active'`.
+   * @param options.documentId - Only return contradictions whose claims touch
+   *   this document (useful for drilling into a single file).
    * @param options.limit - Maximum results to return (1–100).
    */
   list(
@@ -22,17 +25,45 @@ export class ContradictionsResource {
     options: {
       severity?: 'low' | 'medium' | 'high'
       status?: 'active' | 'dismissed' | 'applied'
+      documentId?: string
       limit?: number
     } = {},
   ): Promise<ContradictionList> {
     const params = new URLSearchParams()
     if (options.severity) params.set('severity', options.severity)
     if (options.status) params.set('status', options.status)
+    if (options.documentId) params.set('documentId', options.documentId)
     if (options.limit != null) params.set('limit', String(options.limit))
     const qs = params.toString()
     return this.client.request<ContradictionList>(
       'GET',
       `/collections/${collectionId}/contradictions${qs ? `?${qs}` : ''}`,
+    )
+  }
+
+  /**
+   * List the files (documents) that have at least one claim participating in
+   * a contradiction, with a per-document count. Sorted by count descending,
+   * then filename ascending.
+   *
+   * @param options.status - Restrict the count to a single status. Defaults
+   *   to `'active'`.
+   * @param options.severity - Restrict the count to a single severity.
+   */
+  listFiles(
+    collectionId: string,
+    options: {
+      status?: 'active' | 'dismissed' | 'applied'
+      severity?: 'low' | 'medium' | 'high'
+    } = {},
+  ): Promise<ContradictionFileList> {
+    const params = new URLSearchParams()
+    if (options.status) params.set('status', options.status)
+    if (options.severity) params.set('severity', options.severity)
+    const qs = params.toString()
+    return this.client.request<ContradictionFileList>(
+      'GET',
+      `/collections/${collectionId}/contradictions/files${qs ? `?${qs}` : ''}`,
     )
   }
 
